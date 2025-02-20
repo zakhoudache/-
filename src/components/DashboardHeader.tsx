@@ -8,6 +8,7 @@ import {
   SelectValue,
 } from "./ui/select";
 import { Search } from "lucide-react";
+import { ThemeToggle } from "./ThemeToggle";
 
 interface DashboardHeaderProps {
   onSearch?: (query: string) => void;
@@ -26,8 +27,9 @@ const DashboardHeader = ({
   };
 
   return (
-    <header className="w-full h-20 bg-white border-b border-gray-200 px-6 flex items-center justify-between">
-      <div className="flex-1 max-w-2xl flex gap-4">
+    <header className="w-full h-20 bg-background/80 backdrop-blur-sm border-b border-border px-6 flex items-center justify-between sticky top-0 z-50">
+      <div className="flex-1 max-w-2xl flex gap-4 items-center">
+        <ThemeToggle />
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
           <Input

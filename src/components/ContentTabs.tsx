@@ -39,7 +39,7 @@ const ContentTabs = ({
     URL.revokeObjectURL(url);
   };
   return (
-    <Card className="w-full bg-white p-4">
+    <Card className="w-full bg-card/90 backdrop-blur-sm p-4 shadow-sm border border-border/50">
       <Tabs
         defaultValue={activeTab}
         onValueChange={onTabChange}

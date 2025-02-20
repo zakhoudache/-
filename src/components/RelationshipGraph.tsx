@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useState,
+  useLayoutEffect,
+} from "react";
+import dagre from "dagre";
 import ReactFlow, {
   Background,
   Controls,
@@ -49,10 +55,49 @@ const RelationshipGraph = ({
   const [graphEdges, setEdges, onEdgesChange] = useEdgesState(edges);
   const [isAddingNode, setIsAddingNode] = useState(false);
 
-  useEffect(() => {
-    setNodes(nodes);
-    setEdges(edges);
-  }, [nodes, edges, setNodes, setEdges]);
+  const getLayoutedElements = (
+    nodes: Node[],
+    edges: Edge[],
+    direction = "TB",
+  ) => {
+    const dagreGraph = new dagre.graphlib.Graph();
+    dagreGraph.setDefaultEdgeLabel(() => ({}));
+    dagreGraph.setGraph({ rankdir: direction });
+
+    nodes.forEach((node) => {
+      dagreGraph.setNode(node.id, { width: 180, height: 40 });
+    });
+
+    edges.forEach((edge) => {
+      dagreGraph.setEdge(edge.source, edge.target);
+    });
+
+    dagre.layout(dagreGraph);
+
+    const layoutedNodes = nodes.map((node) => {
+      const nodeWithPosition = dagreGraph.node(node.id);
+      return {
+        ...node,
+        position: {
+          x: nodeWithPosition.x - 90,
+          y: nodeWithPosition.y - 20,
+        },
+      };
+    });
+
+    return { nodes: layoutedNodes, edges };
+  };
+
+  useLayoutEffect(() => {
+    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+      graphNodes,
+      graphEdges,
+    );
+    if (graphNodes.length === 0 && nodes.length > 0) {
+      setNodes(layoutedNodes);
+      setEdges(layoutedEdges);
+    }
+  }, [graphNodes, graphEdges, nodes, edges]);
 
   const onConnect = useCallback(
     (params: Connection) => {
@@ -145,7 +190,7 @@ const RelationshipGraph = ({
   };
 
   return (
-    <Card className="w-[720px] h-[800px] bg-white p-4">
+    <Card className="w-[720px] h-[800px] bg-card/90 backdrop-blur-sm p-4 shadow-sm border border-border/50">
       <ReactFlow
         nodes={graphNodes}
         edges={graphEdges}

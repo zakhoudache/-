@@ -75,7 +75,7 @@ const HistoricalCard = ({
   };
 
   return (
-    <Card className="w-[340px] h-[280px] bg-white hover:shadow-lg transition-shadow duration-200">
+    <Card className="w-[340px] h-[280px] bg-card/90 hover:bg-card hover:shadow-xl transition-all duration-300 border border-border/50">
       <CardHeader>
         <div className="flex justify-between items-start">
           <div className="flex gap-2">

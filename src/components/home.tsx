@@ -8,6 +8,8 @@ import TimelineView from "./TimelineView";
 import { historicalData } from "@/lib/data";
 import { generateGraphData } from "@/lib/graph";
 import { HistoricalItem } from "./lib/types";
+import { v4 as uuidv4 } from "uuid";
+import AITextInput from "./AITextInput";
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState("characters");
@@ -43,12 +45,83 @@ const Home = () => {
   }, [selectedItem]);
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gradient-to-b from-background to-background/80">
       <DashboardHeader
         onSearch={setSearchQuery}
         onImportanceFilter={setImportanceFilter}
       />
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-6 space-y-8">
+        <AITextInput
+          onExtractedData={(data) => {
+            // Convert AI output to HistoricalItem format
+            // First create all items to get their IDs
+            const itemsMap = new Map();
+
+            const newItems = [
+              ...data.characters.map((char) => {
+                const id = uuidv4();
+                const item = {
+                  ...char,
+                  id,
+                  type: "character" as const,
+                  importance: "medium" as const,
+                  relationships: [],
+                  _connections: char.connections || [], // Temporary store connections
+                };
+                itemsMap.set(char.title, item);
+                return item;
+              }),
+              ...data.events.map((event) => {
+                const id = uuidv4();
+                const item = {
+                  ...event,
+                  id,
+                  type: "event" as const,
+                  importance: "medium" as const,
+                  relationships: [],
+                  _connections: event.connections || [],
+                };
+                itemsMap.set(event.title, item);
+                return item;
+              }),
+              ...data.terms.map((term) => {
+                const id = uuidv4();
+                const item = {
+                  ...term,
+                  id,
+                  type: "term" as const,
+                  importance: "medium" as const,
+                  relationships: [],
+                  _connections: term.connections || [],
+                };
+                itemsMap.set(term.title, item);
+                return item;
+              }),
+            ];
+
+            // Process connections and create relationships
+            newItems.forEach((item) => {
+              if (item._connections) {
+                item.relationships = item._connections
+                  .map((conn) => {
+                    const targetItem = itemsMap.get(conn.target);
+                    if (targetItem) {
+                      return {
+                        targetId: targetItem.id,
+                        description: conn.relationship,
+                      };
+                    }
+                    return null;
+                  })
+                  .filter((rel) => rel !== null);
+                delete item._connections;
+              }
+            });
+
+            // Add new items to historicalData
+            historicalData.push(...newItems);
+          }}
+        />
         <ContentTabs activeTab={activeTab} onTabChange={setActiveTab} />
         <div className="mt-6 space-y-6">
           <TimelineView items={filteredItems} onItemClick={setSelectedItem} />

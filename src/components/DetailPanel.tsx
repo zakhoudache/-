@@ -31,7 +31,7 @@ const DetailPanel = ({ item, relatedItems = [] }: DetailPanelProps) => {
   };
 
   return (
-    <Card className="w-full bg-white">
+    <Card className="w-full bg-card/90 backdrop-blur-sm shadow-sm border border-border/50">
       <CardHeader>
         <div className="flex gap-2 mb-2">
           <Badge variant="secondary" className={typeColors[item.type]}>

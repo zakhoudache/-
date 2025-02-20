@@ -41,7 +41,7 @@ const DataGrid = ({
   ],
 }: DataGridProps) => {
   return (
-    <div className="bg-gray-50 p-6 w-full h-full overflow-y-auto">
+    <div className="bg-transparent p-6 w-full h-full overflow-y-auto">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 justify-items-center">
         {items.map((item) => (
           <HistoricalCard

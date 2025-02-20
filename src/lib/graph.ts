@@ -12,7 +12,7 @@ export const generateGraphData = (items: HistoricalItem[]) => {
     id: item.id,
     type: "default",
     data: { label: item.title },
-    position: { x: 100 + index * 200, y: 100 + index * 100 },
+    position: { x: Math.random() * 500, y: Math.random() * 500 },
     style: {
       background: typeColors[item.type].bg,
       color: typeColors[item.type].text,

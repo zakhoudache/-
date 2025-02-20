@@ -11,8 +11,8 @@ interface TimelineViewProps {
 
 const TimelineView = ({ items = [], onItemClick }: TimelineViewProps) => {
   const sortedItems = [...items].sort((a, b) => {
-    const yearA = parseInt(a.year.split("-")[0]);
-    const yearB = parseInt(b.year.split("-")[0]);
+    const yearA = parseInt((a.year || "").split("-")[0] || "0");
+    const yearB = parseInt((b.year || "").split("-")[0] || "0");
     return yearA - yearB;
   });
 
@@ -23,7 +23,7 @@ const TimelineView = ({ items = [], onItemClick }: TimelineViewProps) => {
   };
 
   return (
-    <Card className="w-full bg-white p-4">
+    <Card className="w-full bg-card/90 backdrop-blur-sm p-4 shadow-sm border border-border/50 relative overflow-hidden">
       <h3 className="text-xl font-semibold mb-4 text-right">الخط الزمني</h3>
       <ScrollArea className="h-[200px] w-full">
         <div className="relative">
