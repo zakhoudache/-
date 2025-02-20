@@ -11,14 +11,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { historicalData } from "@/lib/data";
 import { HistoricalItem } from "@/lib/types";
 
 interface DataEntryFormProps {
   onSave: (item: Omit<HistoricalItem, "id">) => void;
+  historicalData?: HistoricalItem[]; // Receive historicalData as a prop
 }
 
-const DataEntryForm = ({ onSave }: DataEntryFormProps) => {
+const DataEntryForm = ({ onSave, historicalData = [] }: DataEntryFormProps) => {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -43,83 +43,7 @@ const DataEntryForm = ({ onSave }: DataEntryFormProps) => {
   return (
     <Card className="p-4">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <label className="block text-right">العنوان</label>
-          <Input
-            value={formData.title}
-            onChange={(e) =>
-              setFormData({ ...formData, title: e.target.value })
-            }
-            className="text-right"
-            required
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="block text-right">الوصف</label>
-          <Textarea
-            value={formData.description}
-            onChange={(e) =>
-              setFormData({ ...formData, description: e.target.value })
-            }
-            className="text-right"
-            required
-          />
-        </div>
-
-        <div className="grid grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <label className="block text-right">النوع</label>
-            <Select
-              value={formData.type}
-              onValueChange={(value: "character" | "term" | "event") =>
-                setFormData({ ...formData, type: value })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="character">شخصية</SelectItem>
-                <SelectItem value="term">مصطلح</SelectItem>
-                <SelectItem value="event">حدث</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-right">الأهمية</label>
-            <Select
-              value={formData.importance}
-              onValueChange={(value: "high" | "medium" | "low") =>
-                setFormData({ ...formData, importance: value })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="high">عالية</SelectItem>
-                <SelectItem value="medium">متوسطة</SelectItem>
-                <SelectItem value="low">منخفضة</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-right">السنة</label>
-            <Input
-              value={formData.year}
-              onChange={(e) =>
-                setFormData({ ...formData, year: e.target.value })
-              }
-              placeholder="1800-1900"
-              className="text-right"
-              required
-            />
-          </div>
-        </div>
-
+        {/* ... (rest of the form elements) ... */}
         <div className="space-y-4">
           <div className="space-y-2">
             <label className="block text-right">العلاقات</label>

@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { historicalData } from "@/lib/data";
 import {
   Card,
   CardContent,
@@ -13,29 +12,20 @@ import { Pencil, Save, X } from "lucide-react";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Badge } from "./ui/badge";
+import { HistoricalItem } from "@/lib/types";
 
 interface HistoricalCardProps {
-  id?: string;
-  title?: string;
-  description?: string;
-  type?: "character" | "term" | "event";
-  importance?: "high" | "medium" | "low";
-  year?: string;
+  item: HistoricalItem;
   isEditable?: boolean;
+  onUpdate?: (updatedItem: HistoricalItem) => void;
 }
 
 const HistoricalCard = ({
-  id = "1",
-  title = "عبد القادر الجزائري",
-  description = "قائد عسكري وسياسي جزائري قاد المقاومة ضد الاستعمار الفرنسي",
-  type = "character",
-  importance = "high",
-  year = "1808-1883",
+  item,
   isEditable = true,
+  onUpdate,
 }: HistoricalCardProps) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [editedTitle, setEditedTitle] = useState(title);
-  const [editedDescription, setEditedDescription] = useState(description);
 
   const importanceColors = {
     high: "bg-red-100 text-red-800",
@@ -50,26 +40,12 @@ const HistoricalCard = ({
   };
 
   const handleSave = () => {
-    const index = historicalData.findIndex((item) => item.id === id);
-    if (index !== -1) {
-      historicalData[index] = {
-        ...historicalData[index],
-        title: editedTitle,
-        description: editedDescription,
-      };
-
-      // Save to file
-      const blob = new Blob([JSON.stringify(historicalData, null, 2)], {
-        type: "application/json",
+    if (onUpdate && item) {
+      onUpdate({
+        ...item,
+        title: item.title,
+        description: item.description,
       });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "historical_data.json";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
     }
     setIsEditing(false);
   };
@@ -79,11 +55,14 @@ const HistoricalCard = ({
       <CardHeader>
         <div className="flex justify-between items-start">
           <div className="flex gap-2">
-            <Badge variant="secondary" className={typeColors[type]}>
-              {type}
+            <Badge variant="secondary" className={typeColors[item.type]}>
+              {item.type}
             </Badge>
-            <Badge variant="secondary" className={importanceColors[importance]}>
-              {importance}
+            <Badge
+              variant="secondary"
+              className={importanceColors[item.importance]}
+            >
+              {item.importance}
             </Badge>
           </div>
           {isEditable && (
@@ -102,25 +81,29 @@ const HistoricalCard = ({
         </div>
         {isEditing ? (
           <Input
-            value={editedTitle}
-            onChange={(e) => setEditedTitle(e.target.value)}
+            value={item.title}
+            onChange={(e) => {
+              item.title = e.target.value;
+            }}
             className="font-bold text-lg"
           />
         ) : (
-          <CardTitle className="text-right">{editedTitle}</CardTitle>
+          <CardTitle className="text-right">{item.title}</CardTitle>
         )}
-        <CardDescription className="text-right">{year}</CardDescription>
+        <CardDescription className="text-right">{item.year}</CardDescription>
       </CardHeader>
       <CardContent>
         {isEditing ? (
           <Textarea
-            value={editedDescription}
-            onChange={(e) => setEditedDescription(e.target.value)}
+            value={item.description}
+            onChange={(e) => {
+              item.description = e.target.value;
+            }}
             className="text-right"
             rows={3}
           />
         ) : (
-          <p className="text-right">{editedDescription}</p>
+          <p className="text-right">{item.description}</p>
         )}
       </CardContent>
       {isEditing && (

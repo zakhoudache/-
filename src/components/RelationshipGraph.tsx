@@ -29,7 +29,6 @@ import {
 } from "./ui/dialog";
 import DataEntryForm from "./DataEntryForm";
 import { v4 as uuidv4 } from "uuid";
-import { historicalData } from "@/lib/data";
 import { HistoricalItem } from "@/lib/types";
 
 interface RelationshipGraphProps {
@@ -37,6 +36,8 @@ interface RelationshipGraphProps {
   edges?: Edge[];
   onNodeClick?: (node: Node) => void;
   onEdgeClick?: (edge: Edge) => void;
+  historicalData: HistoricalItem[];
+  onHistoricalDataUpdate: (data: HistoricalItem[]) => void;
 }
 
 const typeColors = {
@@ -46,13 +47,15 @@ const typeColors = {
 };
 
 const RelationshipGraph = ({
-  nodes = [],
-  edges = [],
+  nodes: initialNodes = [],
+  edges: initialEdges = [],
   onNodeClick = () => {},
   onEdgeClick = () => {},
+  historicalData,
+  onHistoricalDataUpdate,
 }: RelationshipGraphProps) => {
-  const [graphNodes, setNodes, onNodesChange] = useNodesState(nodes);
-  const [graphEdges, setEdges, onEdgesChange] = useEdgesState(edges);
+  const [graphNodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [graphEdges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [isAddingNode, setIsAddingNode] = useState(false);
 
   const getLayoutedElements = (
@@ -93,49 +96,87 @@ const RelationshipGraph = ({
       graphNodes,
       graphEdges,
     );
-    if (graphNodes.length === 0 && nodes.length > 0) {
-      setNodes(layoutedNodes);
-      setEdges(layoutedEdges);
+    setNodes(layoutedNodes);
+    setEdges(layoutedEdges);
+  }, [graphNodes, graphEdges, historicalData]);
+
+  useEffect(() => {
+    if (!Array.isArray(historicalData)) {
+      console.warn("historicalData is not an array. Skipping graph update.");
+      return;
     }
-  }, [graphNodes, graphEdges, nodes, edges]);
+
+    const newNodes = historicalData.map((item) => ({
+      id: item.id,
+      type: "default",
+      data: { label: item.title },
+      position: { x: Math.random() * 500, y: Math.random() * 500 },
+      style: {
+        background: typeColors[item.type].bg,
+        color: typeColors[item.type].text,
+        border: `1px solid ${typeColors[item.type].border}`,
+        borderRadius: "8px",
+        padding: "10px",
+        width: 180,
+        textAlign: "center",
+      },
+    }));
+
+    const newEdges = historicalData.reduce((edges: Edge[], item) => {
+      if (item.relationships) {
+        item.relationships.forEach((rel) => {
+          edges.push({
+            id: `${item.id}-${rel.targetId}`,
+            source: item.id,
+            target: rel.targetId,
+            animated: true,
+          });
+        });
+      }
+      return edges;
+    }, []);
+
+    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+      newNodes,
+      newEdges,
+    );
+    setNodes(layoutedNodes);
+    setEdges(layoutedEdges);
+  }, [historicalData]);
 
   const onConnect = useCallback(
     (params: Connection) => {
       if (params.source && params.target) {
-        // Find the source and target nodes
         const sourceNode = graphNodes.find((n) => n.id === params.source);
         const targetNode = graphNodes.find((n) => n.id === params.target);
 
         if (sourceNode && targetNode) {
-          // Find the corresponding items in historicalData
-          const sourceItem = historicalData.find(
-            (item) => item.id === sourceNode.id,
-          );
-          if (sourceItem) {
-            // Add the relationship
-            sourceItem.relationships = sourceItem.relationships || [];
-            sourceItem.relationships.push({
-              targetId: targetNode.id,
-              description: "New Relationship",
-            });
+          const updatedData = historicalData.map((item) => {
+            if (item.id === sourceNode.id) {
+              const existingRelationship = item.relationships?.find(
+                (rel) => rel.targetId === targetNode.id,
+              );
+              if (!existingRelationship) {
+                return {
+                  ...item,
+                  relationships: [
+                    ...(item.relationships || []),
+                    {
+                      targetId: targetNode.id,
+                      description: "New Relationship",
+                    },
+                  ],
+                };
+              }
+            }
+            return item;
+          });
 
-            // Save to file
-            const blob = new Blob([JSON.stringify(historicalData, null, 2)], {
-              type: "application/json",
-            });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.href = url;
-            link.download = "historical_data.json";
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-          }
+          onHistoricalDataUpdate(updatedData);
         }
       }
     },
-    [graphNodes],
+    [graphNodes, historicalData, onHistoricalDataUpdate],
   );
 
   const onNodeDragStop = useCallback(() => {
@@ -165,28 +206,14 @@ const RelationshipGraph = ({
       },
     };
 
-    // Add to historicalData
-    historicalData.push({
+    const newItem: HistoricalItem = {
       ...formData,
       id: newId,
       relationships: [],
-    });
+    };
 
-    setNodes((nds) => [...nds, newNode]);
+    onHistoricalDataUpdate([...historicalData, newItem]);
     setIsAddingNode(false);
-
-    // Save to file
-    const blob = new Blob([JSON.stringify(historicalData, null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "historical_data.json";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
   };
 
   return (

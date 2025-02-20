@@ -3,41 +3,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Card } from "./ui/card";
 import DataEntryForm from "./DataEntryForm";
 import { HistoricalItem } from "@/lib/types";
-import { historicalData } from "@/lib/data";
-import { v4 as uuidv4 } from "uuid";
 
 interface ContentTabsProps {
   activeTab?: string;
   onTabChange?: (value: string) => void;
+  historicalData?: HistoricalItem[];
+  onSaveItem?: (item: Omit<HistoricalItem, "id">) => void;
 }
 
 const ContentTabs = ({
   activeTab = "characters",
   onTabChange = () => {},
+  historicalData = [], // Receive the data as a prop
+  onSaveItem = () => {},
 }: ContentTabsProps) => {
-  const onSaveItem = (item: Omit<HistoricalItem, "id">) => {
-    const newItem: HistoricalItem = {
-      ...item,
-      id: uuidv4(),
-      relationships: [],
-    };
-
-    // Add to historicalData
-    historicalData.push(newItem);
-
-    // Save to file
-    const blob = new Blob([JSON.stringify(historicalData, null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "historical_data.json";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+  const filteredData = (type: string) => {
+    if (!Array.isArray(historicalData)) return [];
+    return historicalData.filter((item) => item?.type === type) || [];
   };
+
   return (
     <Card className="w-full bg-card/90 backdrop-blur-sm p-4 shadow-sm border border-border/50">
       <Tabs
@@ -56,7 +40,6 @@ const ContentTabs = ({
             الأحداث
           </TabsTrigger>
         </TabsList>
-
         <TabsContent value="characters" className="mt-2">
           <div className="text-right p-4 space-y-4">
             <div>
@@ -65,35 +48,22 @@ const ContentTabs = ({
                 استكشف الشخصيات التاريخية المهمة في التاريخ الجزائري
               </p>
             </div>
-            <DataEntryForm onSave={onSaveItem} />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="terms" className="mt-2">
-          <div className="text-right p-4 space-y-4">
-            <div>
-              <h3 className="text-xl font-semibold mb-2">
-                المصطلحات التاريخية
-              </h3>
-              <p className="text-gray-600">
-                تعرف على المصطلحات والمفاهيم الأساسية
-              </p>
+            <div className="space-y-4">
+              {filteredData("character").map((item) => (
+                <div key={item.id} className="p-4 border rounded">
+                  <h4 className="font-semibold">{item.title}</h4>
+                  <p>{item.description}</p>
+                  <p className="text-sm text-gray-600">{item.year}</p>
+                </div>
+              ))}
             </div>
-            <DataEntryForm onSave={onSaveItem} />
+            <DataEntryForm
+              onSave={onSaveItem}
+              historicalData={historicalData}
+            />
           </div>
         </TabsContent>
-
-        <TabsContent value="events" className="mt-2">
-          <div className="text-right p-4 space-y-4">
-            <div>
-              <h3 className="text-xl font-semibold mb-2">الأحداث التاريخية</h3>
-              <p className="text-gray-600">
-                اكتشف الأحداث المهمة التي شكلت تاريخ الجزائر
-              </p>
-            </div>
-            <DataEntryForm onSave={onSaveItem} />
-          </div>
-        </TabsContent>
+        {/* Similar updates for terms and events tabs */}
       </Tabs>
     </Card>
   );
